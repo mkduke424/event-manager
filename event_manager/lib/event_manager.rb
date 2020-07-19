@@ -51,16 +51,37 @@ def clean_phone_numbers(phone)
   end
 end
 
+# returns the hour in a 24 hour time period that has the most registrations(Only the first instance of the highest hour) 
+def hour_with_most_traffic(arr_hours)
+  analyze_hour = arr_hours.tally
+  hottest_hour = analyze_hour.key(analyze_hour.values.max)
+  "The hour with the most traffic is: #{hottest_hour} on a 24 hour clock"
+end
+# returns the day of the week that users registered the most
+def day_with_most_traffic(arr_days)
+  analyze_days = arr_days.tally
+  hottest_day = analyze_days.key(analyze_days.values.max)
+  days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+  "The day with the most traffic is: #{days[hottest_day]}"
+end
+
 puts "EventManager Initialized"
 
 contents = CSV.open "event_attendees.csv", headers: true, header_converters: :symbol
 template_letter = File.read"form_letter.erb"
 erb_template = ERB.new template_letter
+hours_to_analyze = []
+days_to_analyze = []
 
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
   phone = row[:homephone]
+  time = row[:regdate]
+  
+  time = DateTime.strptime(time, '%m/%d/%Y %H:%M')
+  hours_to_analyze.push(time.hour)
+  days_to_analyze.push(time.wday)
   
   phone = clean_phone_numbers(phone)
 
@@ -70,9 +91,11 @@ contents.each do |row|
   
  
 
-  # form_letter = erb_template.result(binding)
+  form_letter = erb_template.result(binding)
 
-  # save_thank_you_letter(id,form_letter)
-  
+  save_thank_you_letter(id,form_letter)
 
 end
+
+puts hour_with_most_traffic(hours_to_analyze)
+puts day_with_most_traffic(days_to_analyze)
